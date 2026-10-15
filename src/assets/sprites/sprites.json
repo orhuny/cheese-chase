@@ -1,0 +1,127 @@
+{
+  "bg_hills_far": {
+    "file": "bg_hills_far.png",
+    "srcW": 1032,
+    "srcH": 512,
+    "trimX": 0,
+    "trimY": 228,
+    "trimW": 1032,
+    "trimH": 284,
+    "outW": 1032,
+    "outH": 284,
+    "bottomColor": "#bbe5cf"
+  },
+  "bg_hills_near": {
+    "file": "bg_hills_near.png",
+    "srcW": 1034,
+    "srcH": 512,
+    "trimX": 0,
+    "trimY": 162,
+    "trimW": 1034,
+    "trimH": 350,
+    "outW": 1034,
+    "outH": 350,
+    "bottomColor": "#79b543"
+  },
+  "ground_edge": {
+    "file": "ground_edge.png",
+    "srcW": 1464,
+    "srcH": 250,
+    "trimX": 0,
+    "trimY": 85,
+    "trimW": 1464,
+    "trimH": 165,
+    "outW": 1464,
+    "outH": 165,
+    "bottomColor": "#8fd93a",
+    "groundLine": 0.3636
+  },
+  "ground_fill": {
+    "file": "ground_fill.jpg",
+    "srcW": 1024,
+    "srcH": 1024,
+    "trimX": 0,
+    "trimY": 0,
+    "trimW": 512,
+    "trimH": 512,
+    "outW": 512,
+    "outH": 512
+  },
+  "mouse_classic": {
+    "file": "mouse_classic.png",
+    "srcW": 1024,
+    "srcH": 1024,
+    "trimX": 59,
+    "trimY": 282,
+    "trimW": 882,
+    "trimH": 460,
+    "outW": 512,
+    "outH": 267
+  },
+  "mouse_ninja": {
+    "file": "mouse_ninja.png",
+    "srcW": 1024,
+    "srcH": 1024,
+    "trimX": 59,
+    "trimY": 282,
+    "trimW": 882,
+    "trimH": 460,
+    "outW": 512,
+    "outH": 267
+  },
+  "mouse_chef": {
+    "file": "mouse_chef.png",
+    "srcW": 1024,
+    "srcH": 1024,
+    "trimX": 59,
+    "trimY": 162,
+    "trimW": 879,
+    "trimH": 580,
+    "outW": 512,
+    "outH": 338
+  },
+  "mouse_pirate": {
+    "file": "mouse_pirate.png",
+    "srcW": 1024,
+    "srcH": 1024,
+    "trimX": 59,
+    "trimY": 165,
+    "trimW": 879,
+    "trimH": 593,
+    "outW": 512,
+    "outH": 345
+  },
+  "mouse_astronaut": {
+    "file": "mouse_astronaut.png",
+    "srcW": 1024,
+    "srcH": 1024,
+    "trimX": 59,
+    "trimY": 119,
+    "trimW": 889,
+    "trimH": 641,
+    "outW": 512,
+    "outH": 369
+  },
+  "cat_run_a": {
+    "file": "cat_run_a.png",
+    "srcW": 1264,
+    "srcH": 848,
+    "trimX": 50,
+    "trimY": 113,
+    "trimW": 1159,
+    "trimH": 622,
+    "outW": 768,
+    "outH": 412
+  },
+  "bg_sky": {
+    "file": "bg_sky.jpg",
+    "srcW": 1456,
+    "srcH": 720,
+    "trimX": 0,
+    "trimY": 0,
+    "trimW": 1456,
+    "trimH": 720,
+    "outW": 1456,
+    "outH": 720
+  }
+}

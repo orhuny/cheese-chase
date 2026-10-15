@@ -1,0 +1,90 @@
+# Codemagic builds the iOS app on a cloud Mac and uploads it to TestFlight.
+# Setup guide: docs/codemagic-setup.md
+#
+# Before the first build, replace the two values marked "REPLACE":
+#   1. integrations.app_store_connect  → the name you gave your API key in Codemagic
+#   2. APP_STORE_APPLE_ID              → your app's numeric Apple ID (App Store Connect → App Information)
+
+workflows:
+  ios-testflight:
+    name: iOS → TestFlight
+    # mac_mini_m2 is included in Codemagic's free monthly build minutes (check current plans).
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    # Start builds by hand from the Codemagic website (no automatic builds on every push).
+    # To build automatically when you push to main, uncomment:
+    # triggering:
+    #   events:
+    #     - push
+    #   branch_patterns:
+    #     - pattern: main
+
+    integrations:
+      app_store_connect: REPLACE_WITH_YOUR_CODEMAGIC_API_KEY_NAME
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.orhunyaman.cheesechase
+      vars:
+        APP_STORE_APPLE_ID: "REPLACE_ME" # REPLACE with your app's numeric Apple ID, keep the quotes, e.g. "6741234567"
+        XCODE_PROJECT: ios/App/App.xcodeproj
+        XCODE_SCHEME: App
+      node: 22.14.0
+      # Capacitor 8 needs Xcode 26 or newer.
+      xcode: latest
+
+    cache:
+      cache_paths:
+        - $HOME/.npm
+
+    scripts:
+      - name: Check settings
+        script: |
+          if [ "$APP_STORE_APPLE_ID" = "REPLACE_ME" ]; then
+            echo "Set APP_STORE_APPLE_ID in codemagic.yaml (see docs/codemagic-setup.md)"; exit 1
+          fi
+          if grep -q "appl_REPLACE_ME" src/config/revenuecat.ts; then
+            echo "WARNING: RevenueCat key not set in src/config/revenuecat.ts; the shop will say 'Unavailable'."
+          fi
+
+      - name: Install packages
+        script: npm ci
+
+      - name: Build the game and copy it into the iOS project
+        script: npm run ios:sync
+
+      - name: Set version numbers
+        script: |
+          # Version shown in the App Store = "version" in package.json (e.g. 1.0.0).
+          VERSION=$(node -p "require('./package.json').version")
+          # Build number must go up for every upload: latest TestFlight build + 1.
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+          BUILD=$(( ${LATEST:-0} + 1 ))
+          sed -i '' -e "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $VERSION;/" \
+                    -e "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $BUILD;/" "$XCODE_PROJECT/project.pbxproj"
+          echo "Building version $VERSION ($BUILD)"
+
+      - name: Set up code signing
+        script: xcode-project use-profiles
+
+      - name: Build the app (.ipa)
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # Add your TestFlight group names here once you've created them (optional):
+        # beta_groups:
+        #   - Friends
+        submit_to_app_store: false

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Apple privacy manifest for Cheese Chase.
+  - No tracking, no tracking domains.
+  - The app itself collects no data. (RevenueCat's SDK ships its own privacy manifest.)
+  - UserDefaults is used by @capacitor/preferences to store the game save on this device only
+    (reason CA92.1: "access info from the same app that wrote it").
+  If you add ads later, update this file (see docs/adding-ads.md).
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

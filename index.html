@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#4aa8ec">
+<title>Cheese Chase</title>
+</head>
+<body>
+<canvas id="game" aria-label="Cheese Chase game"></canvas>
+
+<div id="hud">
+  <div><span id="dist">0 m</span><span class="small" id="cheesec">🧀 0</span></div>
+  <div style="text-align:right"><span class="small" id="chaser"></span><span class="small" id="best"></span></div>
+</div>
+
+<div class="pads hidden" id="pads">
+  <div class="pad" id="padDive"><span>⬇</span>Dive</div>
+  <div class="pad" id="padJump"><span>⬆</span>Jump</div>
+</div>
+
+<div id="menu" class="overlay">
+  <div class="card">
+    <h1>Cheese Chase</h1>
+    <p>Eat cheese to run faster, jump the traps, and stay ahead of the cat.</p>
+    <div class="controls">
+      <div><b>Left side</b>Hold to dive down hills</div>
+      <div><b>Right side</b>Tap to jump traps</div>
+    </div>
+    <p>Land smoothly on a downhill for a boost. Three in a row = Zoom!</p>
+    <div class="stats">
+      <div><b id="menuBest">0 m</b>best</div>
+      <div><b id="menuCheese">🧀 0</b>cheese</div>
+    </div>
+    <div class="actions">
+      <button class="go" id="playBtn">Play</button>
+      <button class="go alt" id="menuShopBtn">🛒 Shop</button>
+      <button class="go alt" id="menuSettingsBtn" aria-label="Settings">⚙️</button>
+    </div>
+    <p class="keys">Keyboard: hold ↓ to dive, Space or ↑ to jump</p>
+  </div>
+</div>
+
+<div id="over" class="overlay hidden">
+  <div class="card">
+    <h2>The cat caught you!</h2>
+    <div class="big" id="finalDist">0 m</div>
+    <div class="badge hidden" id="newBest">New best!</div>
+    <div class="stats">
+      <div><b id="finalCheese">0</b>cheese</div>
+      <div><b id="finalTraps">0</b>traps jumped</div>
+      <div><b id="finalBest">0 m</b>best</div>
+    </div>
+    <p class="wallet">Wallet: <b id="finalWallet">🧀 0</b></p>
+    <!-- Rewarded-ad offers: only appear when enabled in src/config/features.ts and an ad is ready. -->
+    <div class="offers">
+      <button class="btn ad hidden" id="continueBtn">▶ Continue <small>· watch ad</small></button>
+      <button class="btn ad hidden" id="doubleBtn">🧀 ×2 <small>· watch ad</small></button>
+    </div>
+    <div class="actions">
+      <button class="go" id="againBtn">Play again</button>
+      <button class="go alt" id="overShopBtn">🛒 Shop</button>
+      <button class="go alt" id="overMenuBtn">Menu</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

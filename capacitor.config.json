@@ -1,0 +1,19 @@
+{
+  "appId": "com.orhunyaman.cheesechase",
+  "appName": "Cheese Chase",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "backgroundColor": "#4aa8ec",
+    "loggingBehavior": "debug"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "launchFadeOutDuration": 250,
+      "backgroundColor": "#4aa8ec",
+      "showSpinner": false
+    }
+  }
+}
