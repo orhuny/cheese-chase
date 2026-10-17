@@ -14,7 +14,7 @@ Menus on these websites change often. If a button has moved, search the page for
 ## 2. App Store Connect
 1. appstoreconnect.apple.com → **Business** (older layouts: **Agreements, Tax, and Banking**): accept the **Paid Apps** agreement and fill in your bank and tax details. **In-app purchases do not work at all until this is done**, not even for testing.
 2. **Apps → + → New App**: platform iOS, name `Cheese Chase` (if the name is taken, try e.g. "Cheese Chase: Mouse Run"), language, bundle ID `com.orhunyaman.cheesechase`, SKU `cheesechase`.
-3. In the app: **Monetization → In-App Purchases → +**. Create these 8 products. **The Product ID must be copied exactly.**
+3. In the app: **Monetization → In-App Purchases → +**. Create these 9 products. **The Product ID must be copied exactly.**
 
 | Type | Reference name | Product ID | Price |
 |---|---|---|---|
@@ -26,6 +26,7 @@ Menus on these websites change often. If a button has moved, search the page for
 | Consumable | Cheese Wedge | `com.orhunyaman.cheesechase.cheese_500` | $0.99 |
 | Consumable | Cheese Wheel | `com.orhunyaman.cheesechase.cheese_1500` | $1.99 |
 | Consumable | Cheese Mountain | `com.orhunyaman.cheesechase.cheese_5000` | $4.99 |
+| Consumable | Boost Pack | `com.orhunyaman.cheesechase.boost_10` | $1.99 |
 
    For each one, add an **App Store Localization** (display name and short description, e.g. "Unlocks the Ninja Mouse"). Also add a **Review screenshot**: a screenshot of the shop is fine. You'll take screenshots in TestFlight (Phase 6).
    Do **not** create `remove_ads` yet (see `docs/adding-ads.md`).
@@ -36,7 +37,7 @@ Menus on these websites change often. If a button has moved, search the page for
 2. Create a **Project** called Cheese Chase, then **+ App** → **App Store**.
    - Bundle ID: `com.orhunyaman.cheesechase`
    - Upload the **In-App Purchase Key** `.p8` with its Key ID and Issuer ID.
-3. **Product catalog → Products → + New**: add the same 8 product IDs (or use **Import** if it's offered).
+3. **Product catalog → Products → + New**: add the same 9 product IDs (or use **Import** if it's offered).
    - You don't need Entitlements or Offerings: the game asks for products by ID directly.
 4. **API keys**: copy the **public** Apple key. It starts with `appl_`.
 5. Paste it into `src/config/revenuecat.ts`, replacing `appl_REPLACE_ME`. This key is meant to be public, so it's fine in your code. **Never** paste a secret key (`sk_…`) there.

@@ -50,14 +50,14 @@ export class PurchaseManager {
   /**
    * Quietly applies the store's purchase history. Never prompts the player.
    *  - mice / packs / Remove Ads: re-unlocked (e.g. after reinstalling)
-   *  - cheese bundles bought since this save was created but never credited
+   *  - cheese bundles and boost packs bought since this save was created but never credited
    *    (approved later via Ask to Buy, or the app closed mid-purchase): credited once
    */
   async syncHistory(): Promise<void> {
     const history = await withTimeout(safe(() => this.service.getPurchaseHistory(), []), PRICE_TIMEOUT_MS, []);
     this.grantOwned(history.map(h => h.productId));
 
-    let cheese = 0;
+    let cheese = 0, boosts = 0;
     for (const h of history) {
       const p = getProduct(h.productId);
       if (!p || p.kind !== 'consumable' || h.purchasedAt < this.economy.createdAt - CLOCK_SLACK_MS) continue;
@@ -65,8 +65,10 @@ export class PurchaseManager {
       if (this.economy.isProcessed(keys)) continue;
       this.economy.applyGrant(p.grant, keys.slice(0, 2));
       cheese += p.grant.cheese ?? 0;
+      boosts += p.grant.boosts ?? 0;
     }
-    if (cheese > 0) this.onLateOutcome({ ok: true, tone: 'success', message: `Purchase approved: +${cheese.toLocaleString()} cheese added!` });
+    const added = [cheese > 0 && `+${cheese.toLocaleString()} cheese`, boosts > 0 && `+${boosts} boosts`].filter(Boolean).join(' and ');
+    if (added) this.onLateOutcome({ ok: true, tone: 'success', message: `Purchase approved: ${added} added!` });
     this.notify();
   }
 
@@ -190,6 +192,7 @@ export class PurchaseManager {
 }
 
 function successMessage(p: ProductDef): string {
+  if (p.grant.boosts) return `+${p.grant.boosts} boosts! Tap ⚡ during a run to use one.`;
   if (p.grant.cheese) return `+${p.grant.cheese.toLocaleString()} cheese added to your wallet!`;
   if (p.grant.removeAds) return 'Ads removed. Thank you!';
   if ((p.grant.skins?.length ?? 0) > 1) return 'Thank you for your support! All mice unlocked.';

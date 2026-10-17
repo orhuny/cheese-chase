@@ -1,4 +1,4 @@
-import { SKIN_OFFERS, type SkinOffer } from '../config/economy';
+import { ECONOMY, SKIN_OFFERS, type SkinOffer } from '../config/economy';
 import { getProduct, LISTED_PRODUCTS, PRODUCT_IDS } from '../config/products';
 import type { Economy } from '../economy/Economy';
 import type { Outcome, PurchaseManager } from '../monetization/PurchaseManager';
@@ -6,13 +6,16 @@ import { getSkin } from '../skins/registry';
 import { el } from './dom';
 import { SkinPreview } from './skinPreview';
 
-type Tab = 'mice' | 'cheese';
+type Tab = 'mice' | 'cheese' | 'boosts';
+
+/** `confirming` key for the single cheese Boost. */
+const BOOST_CONFIRM = 'boost';
 
 /** Seconds a "Confirm?" cheese button waits for the second tap. */
 const CONFIRM_MS = 3000;
 
 /**
- * The shop: mice (for cheese or real money), cheese bundles, the Supporter Pack, and Restore Purchases.
+ * The shop: mice (for cheese or real money), cheese bundles, boosts, the Supporter Pack, and Restore Purchases.
  * It only calls Economy and PurchaseManager, never a store SDK directly.
  */
 export class ShopScreen {
@@ -34,6 +37,7 @@ export class ShopScreen {
     this.tabButtons = {
       mice: el('button', { class: 'tab', onclick: () => this.setTab('mice'), attrs: { role: 'tab' } }, '🐭 Mice'),
       cheese: el('button', { class: 'tab', onclick: () => this.setTab('cheese'), attrs: { role: 'tab' } }, '🧀 Cheese'),
+      boosts: el('button', { class: 'tab', onclick: () => this.setTab('boosts'), attrs: { role: 'tab' } }, '⚡ Boosts'),
     };
     this.root = el('div', { class: 'overlay hidden', attrs: { id: 'shop' } },
       el('div', { class: 'card wide' },
@@ -42,7 +46,7 @@ export class ShopScreen {
           this.walletEl,
           el('button', { class: 'icon-btn', onclick: onClose, attrs: { 'aria-label': 'Close shop' } }, '✕'),
         ),
-        el('div', { class: 'tabs', attrs: { role: 'tablist' } }, this.tabButtons.mice, this.tabButtons.cheese),
+        el('div', { class: 'tabs', attrs: { role: 'tablist' } }, this.tabButtons.mice, this.tabButtons.cheese, this.tabButtons.boosts),
         this.list,
         el('div', { class: 'sheet-foot' },
           el('button', { class: 'link-btn', onclick: () => void this.restore() }, 'Restore Purchases'),
@@ -65,14 +69,16 @@ export class ShopScreen {
   render(): void {
     if (this.root.classList.contains('hidden') && this.list.childElementCount) return;
     this.walletEl.textContent = '🧀 ' + this.economy.cheese.toLocaleString();
-    for (const t of ['mice', 'cheese'] as const) {
+    for (const t of ['mice', 'cheese', 'boosts'] as const) {
       this.tabButtons[t].classList.toggle('active', this.tab === t);
       this.tabButtons[t].setAttribute('aria-selected', String(this.tab === t));
     }
     const items = this.tab === 'mice'
       ? [...SKIN_OFFERS.map(o => this.skinItem(o)), this.supporterItem()]
+      : this.tab === 'boosts'
+      ? [this.boostItem(), ...LISTED_PRODUCTS.filter(p => p.grant.boosts).map(p => this.boostPackItem(p.id))]
       : [
-        ...LISTED_PRODUCTS.filter(p => p.kind === 'consumable').map(p => this.cheeseItem(p.id)),
+        ...LISTED_PRODUCTS.filter(p => p.grant.cheese).map(p => this.cheeseItem(p.id)),
         // Remove Ads is only in LISTED_PRODUCTS when ads are enabled (config/features.ts).
         ...LISTED_PRODUCTS.filter(p => p.grant.removeAds).map(p => this.removeAdsItem(p.id)),
       ];
@@ -145,6 +151,33 @@ export class ShopScreen {
     );
   }
 
+  /** One Boost for cheese, with the same "Confirm?" second tap as mice. */
+  private boostItem(): HTMLElement {
+    const price = ECONOMY.boostCheesePrice;
+    const confirming = this.confirming === BOOST_CONFIRM;
+    const afford = this.economy.cheese >= price;
+    return el('div', { class: 'item', attrs: { role: 'listitem' } },
+      el('div', { class: 'item-icon' }, '⚡'),
+      el('div', { class: 'item-name' }, 'Boost'),
+      el('div', { class: 'item-desc' }, `Tap ⚡ in a run to outrun the cat. You have ${this.economy.boosts}.`),
+      el('div', { class: 'item-buttons' }, el('button', {
+        class: `btn cheese${confirming ? ' confirm' : ''}${afford ? '' : ' poor'}`,
+        onclick: () => this.buyBoostWithCheese(),
+        attrs: { 'aria-label': `Buy 1 boost for ${price} cheese` },
+      }, confirming ? 'Confirm?' : `🧀 ${price.toLocaleString()}`)),
+    );
+  }
+
+  private boostPackItem(productId: string): HTMLElement {
+    const p = getProduct(productId)!;
+    return el('div', { class: 'item special', attrs: { role: 'listitem' } },
+      el('div', { class: 'item-icon' }, '⚡⚡⚡'),
+      el('div', { class: 'item-name' }, p.title),
+      el('div', { class: 'item-desc' }, `${p.grant.boosts} boosts`),
+      el('div', { class: 'item-buttons' }, this.priceButton(p.id, p.title)),
+    );
+  }
+
   private removeAdsItem(productId: string): HTMLElement {
     const p = getProduct(productId)!;
     return el('div', { class: 'item special', attrs: { role: 'listitem' } },
@@ -186,6 +219,27 @@ export class ShopScreen {
     if (this.economy.buySkinWithCheese(o.skinId, o.cheesePrice)) {
       this.economy.selectSkin(o.skinId);
       this.notify({ ok: true, tone: 'success', message: `${name} unlocked!` });
+    }
+    this.render();
+  }
+
+  private buyBoostWithCheese(): void {
+    const price = ECONOMY.boostCheesePrice;
+    if (this.economy.cheese < price) {
+      this.notify({ ok: false, tone: 'info', message: `You need ${(price - this.economy.cheese).toLocaleString()} more cheese for a boost.` });
+      return;
+    }
+    if (this.confirming !== BOOST_CONFIRM) {
+      this.confirming = BOOST_CONFIRM;
+      clearTimeout(this.confirmTimer);
+      this.confirmTimer = window.setTimeout(() => { this.confirming = null; this.render(); }, CONFIRM_MS);
+      this.render();
+      return;
+    }
+    this.confirming = null;
+    clearTimeout(this.confirmTimer);
+    if (this.economy.buyBoostWithCheese(price)) {
+      this.notify({ ok: true, tone: 'success', message: `Boost bought! You have ${this.economy.boosts}.` });
     }
     this.render();
   }

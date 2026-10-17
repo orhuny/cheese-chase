@@ -28,6 +28,11 @@ const JOBS = [
   { id: 'mouse_pirate', kind: 'sprite', maxW: 512 },
   { id: 'mouse_astronaut', kind: 'sprite', maxW: 512, glass: true },
   { id: 'cat_run_a', kind: 'sprite', maxW: 768 },
+  // Caught scene: dust cloud (two boiling frames), flying dust puffs, the cat's head popping out.
+  { id: 'fight_cloud_a', kind: 'sprite', maxW: 768 },
+  { id: 'fight_cloud_b', kind: 'sprite', maxW: 768 },
+  { id: 'dust_puff', kind: 'sprite', maxW: 192 },
+  { id: 'cat_head_peek', kind: 'sprite', maxW: 384 },
   { id: 'bg_sky', kind: 'backdrop', maxW: 1456 },
 ];
 

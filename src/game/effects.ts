@@ -3,7 +3,13 @@ import type { View } from '../core/canvas';
 import { speedOf, type Mouse } from './entities/mouse';
 
 export interface Particle { x: number; y: number; vx: number; vy: number; life: number; max: number; r: number; c: string; }
-export interface Popup { text: string; color: string; life: number; }
+/** A comic-book starburst behind a popup (for hits like "Snap!"). */
+export interface Impact { burst: string; core: string; tilt: number; seed: number; }
+/** Small text rising from a spot in the world ("+1" when eating cheese). `combo` makes it bigger. */
+export interface Floater { text: string; x: number; y: number; life: number; combo: number; }
+export const FLOATER_LIFE = 0.7;
+
+export interface Popup { text: string; color: string; life: number; impact?: Impact; }
 /** Floating dandelion fluff, in screen fractions (0..1). */
 export interface Fluff { x: number; y: number; r: number; s: number; ph: number; }
 
@@ -14,15 +20,27 @@ export const DUST = ['#c9a27a', '#a8d68a'];
 export class Effects {
   particles: Particle[] = [];
   popups: Popup[] = [];
+  floaters: Floater[] = [];
   readonly fluff: Fluff[] = Array.from({ length: 40 }, () => ({ x: Math.random(), y: Math.random(), r: rand(1.2, 2.8), s: rand(8, 25), ph: rand(0, 6) }));
 
   reset(): void {
     this.particles = [];
     this.popups = [];
+    this.floaters = [];
   }
 
   popup(text: string, color: string): void {
     this.popups.push({ text, color, life: POPUP_LIFE });
+  }
+
+  floater(text: string, x: number, y: number, combo = 1): void {
+    this.floaters.push({ text, x, y, life: FLOATER_LIFE, combo });
+  }
+
+  /** A cartoon "hit" popup: the text pops out of a jagged starburst (`burst` outside, `core` inside). */
+  impact(text: string, color: string, burst: string, core: string): void {
+    this.popups = this.popups.filter(u => !u.impact); // one hit at a time
+    this.popups.push({ text, color, life: POPUP_LIFE, impact: { burst, core, tilt: rand(-0.18, 0.18), seed: rand(0, 1000) } });
   }
 
   /** A puff of particles that also drifts along with the mouse (`baseVx`). */
@@ -33,10 +51,13 @@ export class Effects {
     }
   }
 
-  /** Dust when running fast, golden sparkles during Zoom. */
+  /** Dust when running fast, blue streaks during a Boost, golden sparkles during Zoom. */
   trail(m: Mouse): void {
     if (m.onGround && speedOf(m) > 500 && Math.random() < 0.5) {
       this.particles.push({ x: m.x - 16, y: m.y + 3, vx: -rand(40, 120), vy: rand(60, 160), life: 0.45, max: 0.45, r: rand(2, 4), c: Math.random() < 0.5 ? '#c9a27a' : '#8fcf6e' });
+    }
+    if (m.boost > 0 && Math.random() < 0.9) {
+      this.particles.push({ x: m.x - 22, y: m.y + 10 + rand(-10, 10), vx: -rand(80, 200), vy: rand(-30, 30), life: 0.5, max: 0.5, r: rand(3, 5), c: Math.random() < 0.5 ? '#7fd3ff' : '#ffffff' });
     }
     if (m.fever > 0 && Math.random() < 0.9) {
       this.particles.push({ x: m.x - 20, y: m.y + 12 + rand(-8, 8), vx: -rand(50, 150), vy: rand(-30, 30), life: 0.6, max: 0.6, r: rand(3, 6), c: Math.random() < 0.5 ? '#ffd23f' : '#fff6cf' });
@@ -49,6 +70,9 @@ export class Effects {
     this.particles = this.particles.filter(q => q.life > 0);
     for (const u of this.popups) u.life -= dt;
     this.popups = this.popups.filter(u => u.life > 0);
+    // Rise, and drift along with the mouse a little so they don't fall behind straight away.
+    for (const f of this.floaters) { f.life -= dt; f.y += 90 * dt; f.x += (driftVx ?? 0) * 0.6 * dt; }
+    this.floaters = this.floaters.filter(f => f.life > 0);
     const drift = driftVx !== null ? 0.00008 * driftVx : 0.015;
     for (const f of this.fluff) {
       f.y += (f.s / view.H) * dt * 1.5 * Math.sin(time + f.ph);

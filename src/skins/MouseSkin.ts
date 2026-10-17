@@ -1,3 +1,5 @@
+import type { SpriteId } from '../render/sprites';
+
 /** What a skin needs to know to animate the mouse. Read-only: skins never change the game. */
 export interface MousePose {
   /** Seconds since the game started; use for wiggles and run cycles. */
@@ -22,6 +24,8 @@ export interface MousePose {
 export interface MouseSkin {
   id: string;
   name: string;
+  /** The picture it is drawn from, if any (the caught scene borrows its legs and tail). */
+  spriteId?: SpriteId;
   /** Height (skin space) of the dizzy stars; defaults to just above the plain mouse's ears. */
   starsY?: number;
   draw(ctx: CanvasRenderingContext2D, pose: MousePose): void;

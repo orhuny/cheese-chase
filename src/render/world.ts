@@ -1,10 +1,13 @@
 import type { Camera } from '../core/camera';
 import type { View } from '../core/canvas';
 import type { Game } from '../game/Game';
+import { TUNING } from '../config/tuning';
+import { mouthOf } from '../game/entities/mouse';
 import { ell, FONT } from './draw';
 import { getSprite, type Sprite } from './sprites';
 
 const GROUND_STEP = 6;
+const FLY = TUNING.cheese.flyTime;
 /** Reused every frame to avoid sampling the terrain twice per column. */
 const groundYs: number[] = [];
 
@@ -91,15 +94,35 @@ export function drawCheese(ctx: CanvasRenderingContext2D, { W }: View, cam: Came
     const sx = cam.toSX(f.x); if (sx < -40 || sx > W + 40) continue;
     const sy = cam.toSY(f.y + Math.sin(time * 3 + f.x * 0.01) * 6);
     ctx.save(); ctx.translate(sx, sy); ctx.scale(k, k); ctx.rotate(Math.sin(time * 2 + f.x) * 0.12);
-    ctx.beginPath(); ctx.moveTo(-16, 9); ctx.lineTo(16, 9); ctx.lineTo(16, -3); ctx.lineTo(-16, 3); ctx.closePath();
-    ctx.fillStyle = '#ffc93a'; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(-16, 3); ctx.lineTo(16, -3); ctx.lineTo(16, -8); ctx.closePath();
-    ctx.fillStyle = '#ffe27a'; ctx.fill();
-    ctx.strokeStyle = '#d9971a'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(-16, 9); ctx.lineTo(16, 9); ctx.lineTo(16, -8); ctx.lineTo(-16, 3); ctx.closePath(); ctx.stroke();
-    ctx.fillStyle = '#e8a817'; ell(ctx, -4, 5, 3, 2.4); ell(ctx, 8, 3, 2.4, 2); ell(ctx, 10, -4, 1.8, 1.4);
+    cheeseWedge(ctx);
     ctx.restore();
   }
+}
+
+/** Cheese the mouse just grabbed: shrinks and spins into its mouth. */
+export function drawEatenCheese(ctx: CanvasRenderingContext2D, cam: Camera, g: Game): void {
+  const k = cam.spriteScale();
+  const [mx, my] = mouthOf(g.mouse);
+  ctx.lineJoin = 'round';
+  for (const f of g.cheese) {
+    if (!f.got || f.eaten < 0 || f.eaten >= FLY) continue;
+    const p = f.eaten / FLY, e = p * p; // speeds up into the mouth
+    const sx = cam.toSX(f.x + (mx - f.x) * e), sy = cam.toSY(f.y + (my - f.y) * e);
+    ctx.save(); ctx.translate(sx, sy); ctx.scale(k * (1 - 0.7 * p), k * (1 - 0.7 * p)); ctx.rotate(-p * 2.5);
+    cheeseWedge(ctx);
+    ctx.restore();
+  }
+}
+
+/** The cheese wedge around (0, 0), 32 units wide. */
+function cheeseWedge(ctx: CanvasRenderingContext2D): void {
+  ctx.beginPath(); ctx.moveTo(-16, 9); ctx.lineTo(16, 9); ctx.lineTo(16, -3); ctx.lineTo(-16, 3); ctx.closePath();
+  ctx.fillStyle = '#ffc93a'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-16, 3); ctx.lineTo(16, -3); ctx.lineTo(16, -8); ctx.closePath();
+  ctx.fillStyle = '#ffe27a'; ctx.fill();
+  ctx.strokeStyle = '#d9971a'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(-16, 9); ctx.lineTo(16, 9); ctx.lineTo(16, -8); ctx.lineTo(-16, 3); ctx.closePath(); ctx.stroke();
+  ctx.fillStyle = '#e8a817'; ell(ctx, -4, 5, 3, 2.4); ell(ctx, 8, 3, 2.4, 2); ell(ctx, 10, -4, 1.8, 1.4);
 }
 
 export function drawTraps(ctx: CanvasRenderingContext2D, { W }: View, cam: Camera, g: Game, time: number): void {

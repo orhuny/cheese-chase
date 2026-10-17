@@ -6,7 +6,7 @@ import type { Input } from '../input/input';
 import { Effects } from './effects';
 import { createCat, updateCat, type Cat } from './entities/cat';
 import { collectCheese, type Cheese } from './entities/cheese';
-import { createMouse, speedOf, type Mouse } from './entities/mouse';
+import { boostSpeed, createMouse, speedOf, type Mouse } from './entities/mouse';
 import { updateTraps, type Trap } from './entities/trap';
 import { physicsStep } from './physics';
 import { spawnAtKeypoint } from './spawner';
@@ -26,6 +26,7 @@ export interface GameEvents {
   jump: void;
   perfect: { streak: number };
   zoom: void;
+  boost: void;
   bonk: void;
   cheese: void;
   snap: void;
@@ -33,6 +34,9 @@ export interface GameEvents {
 }
 
 const T = TUNING.terrain;
+
+/** The dust-cloud scuffle after being caught: where it is (world, cloud bottom centre) and how long it has played. */
+export interface CaughtScene { x: number; y: number; t: number; }
 
 /** One chase: the world, its rules, and its state. Knows nothing about screens, stores, or ads. */
 export class Game {
@@ -43,10 +47,15 @@ export class Game {
   cat: Cat = createCat();
   elapsed = 0;
   cheeseCount = 0;
+  /** Cheese eaten in quick succession (see TUNING.cheese.comboWindow), and when the last one was. */
+  cheeseCombo = 0;
+  lastCheeseAt = -Infinity;
   trapsJumped = 0;
   runId = 0;
   /** How many times this run was continued after being caught. */
   continues = 0;
+  /** Set while (and after) the cat and mouse scuffle; null during a run. */
+  caught: CaughtScene | null = null;
 
   readonly terrain = new Terrain((p, high, d) => spawnAtKeypoint(p, high, d, this.cheese, this.traps));
   readonly fx = new Effects();
@@ -64,6 +73,8 @@ export class Game {
     this.mouse = createMouse();
     this.cat = createCat();
     this.elapsed = 0; this.cheeseCount = 0; this.trapsJumped = 0;
+    this.cheeseCombo = 0; this.lastCheeseAt = -Infinity;
+    this.caught = null;
     this.fx.reset();
     this.input.jumpBuffer = 0;
     this.camera.reset(this.mouse.x);
@@ -82,6 +93,7 @@ export class Game {
     if (this.state !== 'over') return;
     const m = this.mouse;
     this.continues++;
+    this.caught = null;
     this.cat.x = m.x - TUNING.continueRun.catPushBack;
     m.stun = 0;
     if (speedOf(m) < TUNING.start.mouseSpeed) {
@@ -91,6 +103,23 @@ export class Game {
     this.fx.popup('Go!', '#ffd23f');
     this.state = 'play';
     this.input.clear();
+  }
+
+  /** A Boost can start while running, but not while one is still going. */
+  canBoost(): boolean {
+    return this.state === 'play' && this.mouse.boost <= 0;
+  }
+
+  /** Starts a shop Boost. The caller pays for it (Economy.useBoost) first. */
+  boost(): void {
+    if (!this.canBoost()) return;
+    const m = this.mouse;
+    m.boost = TUNING.boost.duration;
+    m.stun = 0;
+    boostSpeed(m, TUNING.boost.speedKick);
+    this.fx.impact('Boost!', '#2f8cff', '#ffd23f', '#fff6cf');
+    this.fx.burst(m.x, m.y + 12, 18, ['#7fd3ff', '#ffffff', '#ffd23f'], 300, m.vx);
+    this.events.emit('boost', undefined);
   }
 
   canStart(): boolean {
@@ -115,6 +144,8 @@ export class Game {
     const sub = TUNING.physics.substeps, h = dt / sub;
     for (let i = 0; i < sub; i++) physicsStep(this, h);
     m.fever = Math.max(0, m.fever - dt);
+    m.boost = Math.max(0, m.boost - dt);
+    m.chomp = Math.max(0, m.chomp - dt);
     m.stun = Math.max(0, m.stun - dt);
 
     // Keep the world just big enough around the mouse.
@@ -124,7 +155,7 @@ export class Game {
     if (this.cheese.length && this.cheese[0].x < behind) this.cheese = this.cheese.filter(f => f.x > behind);
     if (this.traps.length && this.traps[0].x < behind) this.traps = this.traps.filter(t => t.x > behind);
 
-    collectCheese(this);
+    collectCheese(this, dt);
     updateTraps(this);
     if (updateCat(this.cat, m, this.elapsed, dt)) this.gameOver();
 
@@ -132,9 +163,23 @@ export class Game {
     this.camera.update(m.x, m.y, dt);
   }
 
+  /** Advances the caught scene (called every frame while the run is over). */
+  updateOver(dt: number): void {
+    if (this.caught) this.caught.t += dt;
+  }
+
   private gameOver(): void {
     if (this.state !== 'play') return;
     this.state = 'over';
+    // The scuffle happens where they meet; afterwards the mouse sits dizzy on the ground and the cat stands behind it.
+    const m = this.mouse;
+    const [gy] = this.terrain.ground(m.x - TUNING.cat.catchDistance / 2);
+    this.caught = { x: m.x - TUNING.cat.catchDistance / 2, y: gy, t: 0 };
+    const [my, s] = this.terrain.ground(m.x);
+    const len = Math.hypot(1, s);
+    m.y = my; m.onGround = true; m.tx = 1 / len; m.ty = s / len; m.vx = m.tx; m.vy = m.ty;
+    m.stun = Infinity; m.fever = 0; m.boost = 0;
+    this.cat.x = m.x - TUNING.cat.catchDistance - TUNING.caught.catSitsBehind;
     this.overAt = performance.now();
     this.input.clear();
     this.events.emit('gameOver', { runId: this.runId, distance: this.distance(), cheese: this.cheeseCount, trapsJumped: this.trapsJumped });

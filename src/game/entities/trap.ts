@@ -15,8 +15,8 @@ export function updateTraps(g: Game): void {
       if (m.y - gy < TR.hitHeight) {
         t.hit = true; m.stun = TR.stunTime; m.streak = 0; m.fever = 0;
         m.vx *= TR.speedKept; m.vy *= TR.speedKept;
-        g.fx.popup('Snap!', '#ff6b5b');
-        g.fx.burst(t.x, gy + 10, 12, ['#c58b4f', '#ffd23f', '#ffffff'], 220, m.vx);
+        g.fx.impact('Snap!', '#ff4b3a', '#ffd23f', '#fff6cf');
+        g.fx.burst(t.x, gy + 10, 22, ['#c58b4f', '#ffd23f', '#ffffff', '#ff6b5b'], 320, m.vx);
         g.events.emit('snap', undefined);
       }
     } else if (m.x > t.x + TR.hitHalfWidth) {

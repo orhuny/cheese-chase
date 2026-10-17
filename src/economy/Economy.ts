@@ -13,7 +13,7 @@ export interface RunReward {
 }
 
 /**
- * The cheese wallet and owned mice. All rules about earning, spending and unlocking live here;
+ * The cheese wallet, boosts and owned mice. All rules about earning, spending and unlocking live here;
  * screens and stores call these methods instead of editing the save directly.
  */
 export class Economy {
@@ -23,6 +23,7 @@ export class Economy {
   constructor(private readonly save: SaveManager) {}
 
   get cheese(): number { return this.save.data.cheese; }
+  get boosts(): number { return this.save.data.boosts; }
   get best(): number { return this.save.data.bestDistance; }
   get selectedSkin(): string { return this.save.data.selectedSkin; }
   get adsRemoved(): boolean { return this.save.data.adsRemoved; }
@@ -60,6 +61,20 @@ export class Economy {
     return true;
   }
 
+  /** Buys one Boost with cheese. Returns false (and changes nothing) if the wallet is too small. */
+  buyBoostWithCheese(price: number): boolean {
+    if (!(price >= 0) || this.cheese < price) return false;
+    this.save.update(d => { d.cheese -= price; d.boosts++; });
+    return true;
+  }
+
+  /** Uses one Boost. Returns false if there are none left. */
+  useBoost(): boolean {
+    if (this.boosts <= 0) return false;
+    this.save.update(d => { d.boosts--; });
+    return true;
+  }
+
   ownsSkin(id: string): boolean {
     return this.save.data.ownedSkins.includes(id);
   }
@@ -93,6 +108,7 @@ export class Economy {
     if (this.isProcessed(ids)) return false;
     this.save.update(d => {
       if (grant.cheese && grant.cheese > 0) d.cheese += Math.floor(grant.cheese);
+      if (grant.boosts && grant.boosts > 0) d.boosts += Math.floor(grant.boosts);
       for (const id of grant.skins ?? []) if (!d.ownedSkins.includes(id)) d.ownedSkins.push(id);
       if (grant.removeAds) d.adsRemoved = true;
       d.processedTransactions.push(...ids);

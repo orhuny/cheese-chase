@@ -7,6 +7,7 @@ const P = TUNING.physics;
 const J = TUNING.jump;
 const L = TUNING.landing;
 const D = TUNING.dive;
+const B = TUNING.boost;
 
 /** Jump along the ground normal (perpendicular to the slope). */
 function doJump(g: Game): void {
@@ -37,8 +38,8 @@ function land(g: Game, gy: number, tx: number, ty: number, vt: number): number {
       g.fx.burst(m.x, gy, 16, ['#ffffff', '#fff1b8', '#ffd23f'], 260, m.vx);
     } else if (diff > L.bonkMinAngle) {
       m.streak = 0;
-      g.fx.popup('Bonk!', '#f3e6d6');
-      g.fx.burst(m.x, gy, 8, DUST, 160, m.vx);
+      g.fx.impact('Bonk!', '#8e5cf0', '#ffffff', '#cfe9ff');
+      g.fx.burst(m.x, gy, 16, [...DUST, '#ffffff'], 240, m.vx);
       g.events.emit('bonk', undefined);
     }
   }
@@ -54,9 +55,10 @@ export function physicsStep(g: Game, h: number): void {
   const diving = g.input.diving() && m.stun <= 0;
   const mult = diving ? (m.onGround ? D.gravityMultGround : D.gravityMultAir) : 1;
   m.vy -= P.gravity * mult * h;
-  if (m.fever > 0) {
+  const accel = (m.fever > 0 ? L.zoomAccel : 0) + (m.boost > 0 ? B.accel : 0);
+  if (accel > 0) {
     const sp = Math.hypot(m.vx, m.vy) || 1;
-    m.vx += m.vx / sp * L.zoomAccel * h; m.vy += m.vy / sp * L.zoomAccel * h;
+    m.vx += m.vx / sp * accel * h; m.vy += m.vy / sp * accel * h;
   }
   m.x += m.vx * h; m.y += m.vy * h;
 

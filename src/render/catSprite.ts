@@ -3,7 +3,7 @@ import type { View } from '../core/canvas';
 import { clamp } from '../core/math';
 import type { Game } from '../game/Game';
 import { ell, ellS, FONT } from './draw';
-import { drawRigged, type LegStyle, type Rig } from './rig';
+import { drawRigged, type Rig } from './rig';
 import { getSprite, type Sprite } from './sprites';
 
 function catLeg(ctx: CanvasRenderingContext2D, x: number, y: number, a: number, fill: string): void {
@@ -14,36 +14,42 @@ function catLeg(ctx: CanvasRenderingContext2D, x: number, y: number, a: number, 
 }
 
 /** Whole cat (tail tip to front paw), in game units. */
-const CAT_LENGTH = 185;
+export const CAT_LENGTH = 185;
 /** The picture's right edge (front paw) sits this far ahead of cat.x; the cat catches the mouse at +70. */
 const CAT_FRONT_X = 95;
 /** Paws sink this much into the grass so the cat doesn't float. */
 const CAT_FEET_Y = 3;
 
 /**
- * The cat's legs, in art/source/cat_run_a.jpg pixels: a gallop, with the hind pair and the
- * front pair half a stride apart and the two legs of each pair slightly offset.
+ * The cat's own legs, cut out of art/source/cat_run_a.jpg (original pixels) and swung in a gallop:
+ * the hind pair and the front pair half a stride apart, the two legs of each pair slightly offset.
  */
-const CAT_RIG: Rig = {
+export const CAT_RIG: Rig = {
   legs: [
-    { hip: [330, 535], upper: 85, lower: 85, foot: [64, 36], far: true, base: -0.2, swing: 0.9, kneeBend: 1.0, phase: 0.45, air: -1.1 },
-    { hip: [930, 600], upper: 52, lower: 56, foot: [64, 36], far: true, base: 0.25, swing: 0.9, kneeBend: 0.8, phase: Math.PI + 0.45, air: 1.1 },
-    { hip: [355, 545], upper: 85, lower: 85, foot: [64, 36], far: false, base: -0.2, swing: 0.9, kneeBend: 1.0, phase: 0, air: -0.9 },
-    { hip: [952, 610], upper: 52, lower: 56, foot: [64, 36], far: false, base: 0.25, swing: 0.9, kneeBend: 0.8, phase: Math.PI, air: 0.9 },
-  ],
-  // The legs drawn in the current picture; not needed once a "no legs" picture is used.
-  erase: [
-    [[200, 500], [252, 515], [292, 548], [250, 562], [222, 628], [146, 634], [134, 585], [170, 535]],
-    [[322, 562], [375, 568], [382, 592], [350, 684], [274, 690], [276, 640], [312, 600]],
-    [[985, 505], [1060, 508], [1140, 540], [1210, 556], [1222, 628], [1100, 634], [995, 606]],
-    [[940, 598], [1000, 638], [1060, 652], [1125, 662], [1130, 740], [990, 740], [905, 700], [888, 660]],
+    { // front leg reaching forward
+      piece: [[930, 552], [960, 546], [1000, 535], [1010, 512], [1016, 490], [1030, 500], [1115, 522], [1216, 560], [1218, 634], [1150, 632], [1110, 622], [1000, 613], [975, 606], [930, 582]],
+      seam: [[1020, 492], [974, 603]], hip: [975, 560], base: 0.15, swing: 0.4, phase: Math.PI + 0.45, air: -0.2,
+    },
+    { // hind leg under the belly
+      piece: [[318, 532], [402, 552], [400, 600], [366, 688], [264, 694], [264, 622], [316, 572]],
+      seam: [[330, 571], [398, 599]], hip: [362, 548], base: -0.1, swing: 0.45, phase: 0.45, air: 0.25,
+    },
+    { // hind leg stretched back
+      piece: [[294, 462], [296, 546], [274, 554], [212, 640], [128, 640], [128, 560], [210, 470], [250, 448]],
+      seam: [[257, 468], [266, 543]], hip: [288, 505], base: -0.2, swing: 0.45, phase: 0, air: 0.3,
+    },
+    { // front leg reaching down
+      piece: [[778, 545], [880, 518], [962, 560], [975, 606], [1000, 613], [1112, 644], [1116, 740], [1000, 740], [896, 684], [778, 604]],
+      seam: [[788, 562], [970, 602]], hip: [880, 542], base: 0.1, swing: 0.4, phase: Math.PI, air: -0.15,
+    },
   ],
 };
 
-const CAT_LEG_STYLE: LegStyle = {
-  fur: '#fcae55', farFur: '#e3893a', foot: '#fde9c6', footFar: '#ead0a6',
-  outline: '#3b1d1c', width: 46, outlineW: 9, toes: true,
-};
+/** The cat's tail (original pixels), and where it joins the body. */
+export const CAT_TAIL = {
+  outline: [[40, 150], [120, 105], [205, 112], [272, 148], [335, 228], [405, 268], [400, 326], [384, 336], [315, 318], [255, 266], [205, 230], [120, 224], [55, 206], [36, 180]],
+  anchor: [400, 300],
+} as const;
 
 /** The cat picture with galloping legs, hop and rock made in code. */
 export function drawCatPicture(ctx: CanvasRenderingContext2D, pic: Sprite, x: number, y: number, slope: number, k: number, run: number): void {
@@ -56,7 +62,7 @@ export function drawCatPicture(ctx: CanvasRenderingContext2D, pic: Sprite, x: nu
   // Draw in original-image pixels: the picture's right/bottom edges land on CAT_FRONT_X / CAT_FEET_Y.
   ctx.translate(CAT_FRONT_X - (pic.trimX + pic.trimW) * u, CAT_FEET_Y - (pic.trimY + pic.trimH) * u);
   ctx.scale(u, u);
-  drawRigged(ctx, pic, CAT_RIG, CAT_LEG_STYLE, run);
+  drawRigged(ctx, pic, CAT_RIG, run);
   ctx.restore();
 }
 
@@ -74,7 +80,7 @@ export function drawCat(ctx: CanvasRenderingContext2D, { H }: View, cam: Camera,
     return;
   }
   const [gy, s] = g.terrain.ground(g.cat.x);
-  const run = time * 13;
+  const run = g.state === 'play' ? time * 13 : 0; // stands still once the run is over
   const pic = getSprite('cat_run_a');
   if (pic) {
     drawCatPicture(ctx, pic, ssx, cam.toSY(gy), -Math.atan(s), k, run);

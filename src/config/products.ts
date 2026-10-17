@@ -3,7 +3,7 @@
  * These IDs must match EXACTLY what you create in App Store Connect and RevenueCat.
  *
  * Types (Apple's wording):
- *  - consumable:     can be bought again and again (cheese bundles)
+ *  - consumable:     can be bought again and again (cheese bundles, boost packs)
  *  - non_consumable: bought once, owned forever, restorable (mice, Supporter Pack)
  *
  * Prices are set in App Store Connect; `referencePrice` is only shown by the
@@ -23,6 +23,7 @@ export const PRODUCT_IDS = {
   cheeseSmall: PREFIX + 'cheese_500',
   cheeseMedium: PREFIX + 'cheese_1500',
   cheeseLarge: PREFIX + 'cheese_5000',
+  boostPack: PREFIX + 'boost_10',
   /** PLANNED. Only sold once ads exist. Don't create it in App Store Connect until then. */
   removeAds: PREFIX + 'remove_ads',
 } as const;
@@ -32,6 +33,8 @@ export type ProductKind = 'consumable' | 'non_consumable';
 /** What the player receives. */
 export interface ProductGrant {
   cheese?: number;
+  /** Boosts added to the wallet. */
+  boosts?: number;
   skins?: readonly string[];
   /** Turns off interstitial ads for good. */
   removeAds?: boolean;
@@ -60,6 +63,7 @@ export const PRODUCTS: readonly ProductDef[] = [
   { id: PRODUCT_IDS.cheeseSmall, kind: 'consumable', title: 'Cheese Wedge', description: '500 cheese', grant: { cheese: 500 }, referencePrice: '$0.99' },
   { id: PRODUCT_IDS.cheeseMedium, kind: 'consumable', title: 'Cheese Wheel', description: '1,500 cheese', grant: { cheese: 1500 }, referencePrice: '$1.99' },
   { id: PRODUCT_IDS.cheeseLarge, kind: 'consumable', title: 'Cheese Mountain', description: '5,000 cheese', grant: { cheese: 5000 }, referencePrice: '$4.99' },
+  { id: PRODUCT_IDS.boostPack, kind: 'consumable', title: 'Boost Pack', description: '10 boosts: tap ⚡ during a run to outrun the cat.', grant: { boosts: 10 }, referencePrice: '$1.99' },
   { id: PRODUCT_IDS.removeAds, kind: 'non_consumable', title: 'Remove Ads', description: 'No more ads between runs. Optional reward ads stay available.', grant: { removeAds: true }, referencePrice: '$2.99', requiresAds: true },
 ];
 

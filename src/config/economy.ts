@@ -7,6 +7,8 @@ import { PRODUCT_IDS } from './products';
 export const ECONOMY = {
   /** Cheese added to the wallet for each cheese collected in a run. */
   walletCheesePerPickup: 1,
+  /** Cheese price of a single Boost in the shop (the 10-pack costs real money, see products.ts). */
+  boostCheesePrice: 200,
 } as const;
 
 /** How each mouse can be unlocked. Mice are cosmetic only: no gameplay advantage. */

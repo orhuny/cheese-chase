@@ -16,6 +16,9 @@ export class HapticsPlayer {
   listen(events: Emitter<GameEvents>): void {
     events.on('perfect', () => this.impact(ImpactStyle.Light));
     events.on('zoom', () => this.impact(ImpactStyle.Medium));
+    events.on('boost', () => this.impact(ImpactStyle.Medium));
     events.on('snap', () => this.impact(ImpactStyle.Heavy));
+    // A few knocks while the cat and mouse scuffle in the dust cloud.
+    events.on('gameOver', () => [0, 260, 620, 980].forEach((ms, i) => setTimeout(() => this.impact(i ? ImpactStyle.Medium : ImpactStyle.Heavy), ms)));
   }
 }

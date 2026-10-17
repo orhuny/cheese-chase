@@ -113,6 +113,50 @@
     "outW": 768,
     "outH": 412
   },
+  "fight_cloud_a": {
+    "file": "fight_cloud_a.png",
+    "srcW": 1264,
+    "srcH": 848,
+    "trimX": 159,
+    "trimY": 86,
+    "trimW": 946,
+    "trimH": 678,
+    "outW": 768,
+    "outH": 550
+  },
+  "fight_cloud_b": {
+    "file": "fight_cloud_b.png",
+    "srcW": 1264,
+    "srcH": 848,
+    "trimX": 159,
+    "trimY": 86,
+    "trimW": 946,
+    "trimH": 678,
+    "outW": 768,
+    "outH": 550
+  },
+  "dust_puff": {
+    "file": "dust_puff.png",
+    "srcW": 1264,
+    "srcH": 848,
+    "trimX": 303,
+    "trimY": 136,
+    "trimW": 658,
+    "trimH": 576,
+    "outW": 192,
+    "outH": 168
+  },
+  "cat_head_peek": {
+    "file": "cat_head_peek.png",
+    "srcW": 1264,
+    "srcH": 848,
+    "trimX": 298,
+    "trimY": 92,
+    "trimW": 668,
+    "trimH": 691,
+    "outW": 384,
+    "outH": 397
+  },
   "bg_sky": {
     "file": "bg_sky.jpg",
     "srcW": 1456,

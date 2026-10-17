@@ -14,6 +14,7 @@ export interface SaveData {
   createdAt: number;
   bestDistance: number;   // metres
   cheese: number;         // wallet (soft currency)
+  boosts: number;         // shop Boosts left (one is used per tap during a run)
   ownedSkins: string[];
   selectedSkin: string;
   settings: {
@@ -38,6 +39,7 @@ export function defaultSave(): SaveData {
     createdAt: Date.now(),
     bestDistance: 0,
     cheese: 0,
+    boosts: 0,
     ownedSkins: [DEFAULT_SKIN_ID],
     selectedSkin: DEFAULT_SKIN_ID,
     settings: { sound: true, haptics: true },
@@ -82,6 +84,7 @@ export function parseSave(raw: unknown): SaveData {
     createdAt: typeof r.createdAt === 'number' && Number.isFinite(r.createdAt) && r.createdAt > 0 ? r.createdAt : d.createdAt,
     bestDistance: count(r.bestDistance),
     cheese: count(r.cheese),
+    boosts: count(r.boosts),
     ownedSkins,
     selectedSkin: selected,
     settings: {

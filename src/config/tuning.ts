@@ -55,6 +55,10 @@ export const TUNING = {
 
   cheese: {
     speedBoost: 110,     // instant speed gained per cheese (also cures dizziness)
+    // eating animation
+    flyTime: 0.14,       // the cheese flies into the mouse's mouth this fast
+    chompTime: 0.32,     // the mouse's two quick munches
+    comboWindow: 0.9,    // cheese eaten within this many seconds of the last one counts as a combo
     pickupRangeX: 55,
     pickupRangeY: 48,
     mouseCenterY: 12,    // the mouse's middle is this high above its feet
@@ -81,6 +85,13 @@ export const TUNING = {
     hitHeight: 18,               // mouse must be higher than this to clear it
     stunTime: 0.8,
     speedKept: 0.4,              // fraction of speed kept after a snap
+  },
+
+  boost: {
+    // The shop's Boost: tapped during a run, uses one boost from the wallet.
+    duration: 3,         // seconds of extra speed
+    speedKick: 350,      // instant speed gained when it starts (also cures dizziness)
+    accel: 700,          // extra acceleration per second while it lasts
   },
 
   cat: {
@@ -126,13 +137,20 @@ export const TUNING = {
     maxPixelRatio: 2,      // cap for high-DPI screens (keeps 60 fps on iPhones)
   },
 
+  caught: {
+    // The dust-cloud scuffle when the cat catches the mouse.
+    sceneDuration: 1.7,  // seconds, including the cloud clearing
+    clearTime: 0.35,     // last part of the scene: the cloud puffs away and reveals the dizzy mouse
+    catSitsBehind: 110,   // afterwards the cat stands this much further back than the catch point
+  },
+
   continueRun: {
     // Used only by the (disabled) "watch an ad to continue" feature.
     catPushBack: 1200,   // the cat restarts this far behind the mouse (30 m)
   },
 
   flow: {
-    gameOverScreenDelayMs: 450,
+    gameOverScreenDelayMs: 1900, // a little longer than caught.sceneDuration
     restartLockMs: 800,    // ignore taps this long after being caught
   },
 } as const;

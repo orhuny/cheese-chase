@@ -54,6 +54,7 @@ async function main(): Promise<void> {
   const input = new Input(view, {
     isPlaying: () => game.state === 'play',
     tryStart: () => { if (screens.current === 'menu' || screens.current === 'over') startRun(); },
+    boost: () => tryBoost(),
     back: () => { if (screens.current === 'shop' || screens.current === 'settings') screens.back(); },
   });
   const game = new Game(view, input);
@@ -71,6 +72,19 @@ async function main(): Promise<void> {
     screens.show(null);
     hud.showPads(true);
   }
+
+  /** Uses one Boost from the wallet, if a Boost can start right now. */
+  function tryBoost(): void {
+    if (!game.canBoost()) return;
+    if (!economy.useBoost()) {
+      notify({ ok: false, tone: 'info', message: 'No boosts left. Get more in the Shop.' });
+      return;
+    }
+    game.boost();
+  }
+  // React on touch-down (like Jump), and keep the tap from also counting as a jump or dive.
+  $('boostBtn').addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); tryBoost(); });
+  $('boostBtn').addEventListener('click', e => e.preventDefault());
 
   // Rewarded-ad offers on the game-over card (hidden while ads are disabled).
   let lastReward: RunReward | null = null;
@@ -138,7 +152,7 @@ async function main(): Promise<void> {
     if (document.visibilityState === 'hidden') void save.flush();
   });
 
-  if (import.meta.env.DEV) installDevTools(save, economy, purchases);
+  if (import.meta.env.DEV) installDevTools(save, economy, purchases, game);
 
   // Wait (briefly) for the character and sky pictures, so the first frame already shows them.
   await loadSprites();
@@ -151,9 +165,10 @@ async function main(): Promise<void> {
     time += dt;
     input.tick(dt);
     if (game.state === 'play') game.update(dt);
+    else if (game.state === 'over') game.updateOver(dt);
     game.fx.update(dt, time, view, game.state === 'play' ? game.mouse.vx : null);
     render(view, game, getSkin(economy.selectedSkin), time);
-    hud.update(game, economy.best);
+    hud.update(game, economy.best, economy.boosts);
     shop.tick(time);
   });
   hideSplashWhenReady();
